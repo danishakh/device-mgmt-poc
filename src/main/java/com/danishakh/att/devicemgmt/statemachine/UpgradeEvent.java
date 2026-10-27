@@ -43,22 +43,22 @@ public sealed interface UpgradeEvent
      * A device calling in with an {@code inform}.
      *
      * <p>Per decision D12, a non-null {@code transferComplete} makes this a TransferComplete,
-     * whatever {@code kind} says. {@code kind} is only the label the device chose for the call.
+     * whatever {@code informEvent} says. {@code informEvent} is only the label the device chose for the call.
      */
     final class Inform implements UpgradeEvent {
-        private final InformEvent kind;
+        private final InformEvent informEvent;
         private final String firmwareVersion;
         private final TransferResult transferComplete;
 
-        public Inform(InformEvent kind, String firmwareVersion, TransferResult transferComplete) {
-            this.kind = kind;
+        public Inform(InformEvent informEvent, String firmwareVersion, TransferResult transferComplete) {
+            this.informEvent = informEvent;
             this.firmwareVersion = firmwareVersion;
             this.transferComplete = transferComplete;
         }
 
         /** The reason the device gave for calling in. */
-        public InformEvent kind() {
-            return kind;
+        public InformEvent informEvent() {
+            return informEvent;
         }
 
         /** The firmware version the device reported. */

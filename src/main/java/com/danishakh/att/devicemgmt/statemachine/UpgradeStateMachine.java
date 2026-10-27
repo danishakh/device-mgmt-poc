@@ -12,7 +12,7 @@ import java.time.Instant;
 
 /**
  * The upgrade state machine as a pure function: (row, event, now, timings) to a transition.
- * It does no IO and needs no Spring context. The service writes the result with one conditional UPDATE.
+ * It does no I/O and needs no Spring context. The service writes the result with one conditional UPDATE.
  * Rules follow IMPLEMENTATION-PLAN.md §2.3, with decisions D7, D9, D12 and D13 applied.
  */
 public final class UpgradeStateMachine {
@@ -142,7 +142,7 @@ public final class UpgradeStateMachine {
         if (row.getTargetVersion().equals(version)) {
             return finish(row, SUCCEEDED, OutcomeReason.INFERRED_FROM_VERSION, null, version, false, false);
         }
-        if (inform.kind() == InformEvent.BOOT) {
+        if (inform.informEvent() == InformEvent.BOOT) {
             if (row.getFromVersion().equals(version)) {
                 return finish(row, FAILED, OutcomeReason.ROLLED_BACK, null, version, false, false);
             }
