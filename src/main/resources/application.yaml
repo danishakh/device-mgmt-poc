@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: devicemgmt
+  datasource:
+    # 5433 is the Compose mapping. 5432 is taken by a native Windows PostgreSQL service.
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/devicemgmt}
+    username: ${DB_USER:devicemgmt}
+    password: ${DB_PASSWORD:devicemgmtpass}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+# All durations are in milliseconds and carry an Ms suffix.
+devicemgmt:
+  simulator-url: ${SIMULATOR_URL:http://localhost:9000}
+  scheduler:
+    tick-interval-ms: 1000
+    progress-log-interval-ms: 10000
+  campaign:
+    default-max-concurrent: 100
+    default-min-sample: 50
+  timeouts:
+    cr-wait-ms: 30000          # NOTIFIED: wait for the device to inform after a connection request
+    max-cr: 2                  # connection-request attempts before TIMED_OUT(NO_CALLBACK)
+    ack-wait-ms: 30000         # DOWNLOAD_SENT: wait for an acknowledgement
+    max-dl: 2                  # times the same commandKey is issued, one per inform
+    completion-wait-ms: 300000 # ACCEPTED: wait for a TransferComplete or version evidence
+  http-client:
+    connect-timeout-ms: 2000   # max time to open a connection to the simulator
+    read-timeout-ms: 5000      # max time to wait for a response from the simulator
+    max-retries: 2             # retry only on IO errors and 5xx
+    pool-size: 32              # bounded executor for outbound connection requests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
