@@ -13,7 +13,7 @@ import java.time.Instant;
 /**
  * The upgrade state machine as a pure function: (row, event, now, timings) to a transition.
  * It does no I/O and needs no Spring context. The service writes the result with one conditional UPDATE.
- * Rules follow IMPLEMENTATION-PLAN.md §2.3, with decisions D7, D9, D12 and D13 applied.
+ * Rules follow HLD §7.
  */
 public final class UpgradeStateMachine {
 
@@ -48,7 +48,7 @@ public final class UpgradeStateMachine {
      * Handles a scheduler {@link UpgradeEvent.Tick}.
      *
      * <p>Only a PENDING row with a free slot ({@code tick.mayStart()}) is affected. The scheduler
-     * is the only thing that is allowed to leave PENDING (decision D7): a device that informs on
+     * is the only thing that is allowed to leave PENDING (HLD §10.1): a device that informs on
      * its own while PENDING is ignored by {@link #onInform}.
      */
     private static Transition onTick(UpgradeRow row, UpgradeEvent.Tick tick, Instant now, UpgradeTimings t) {
@@ -99,7 +99,7 @@ public final class UpgradeStateMachine {
 
     /**
      * Handles a device {@link UpgradeEvent.Inform}. A TransferComplete payload is handled first,
-     * regardless of state (decision D12 and D13); otherwise the row's current state decides
+     * regardless of state (HLD §7.2); otherwise the row's current state decides
      * whether to start a Download, re-issue one, or look at ACCEPTED evidence.
      */
     private static Transition onInform(UpgradeRow row, UpgradeEvent.Inform inform, Instant now, UpgradeTimings t) {
@@ -133,7 +133,7 @@ public final class UpgradeStateMachine {
 
     /**
      * Decides the outcome of an ACCEPTED row that informs with no TransferComplete. The reported
-     * version is the only evidence available (plan §6.3): a match on the target succeeds, a BOOT
+     * version is the only evidence available (HLD §7.2): a match on the target succeeds, a BOOT
      * on the from-version is a rollback, a BOOT on anything else is unexpected, and anything
      * else (PERIODIC or CONNECTION_REQUEST on the old version) just keeps waiting.
      */

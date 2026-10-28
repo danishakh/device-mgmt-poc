@@ -42,7 +42,7 @@ public sealed interface UpgradeEvent
     /**
      * A device calling in with an {@code inform}.
      *
-     * <p>Per decision D12, a non-null {@code transferComplete} makes this a TransferComplete,
+     * <p>Per HLD §7.2, a non-null {@code transferComplete} makes this a TransferComplete,
      * whatever {@code informEvent} says. {@code informEvent} is only the label the device chose for the call.
      */
     final class Inform implements UpgradeEvent {

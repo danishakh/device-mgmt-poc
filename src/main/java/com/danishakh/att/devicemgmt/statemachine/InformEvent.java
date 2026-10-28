@@ -8,7 +8,7 @@ public enum InformEvent {
     CONNECTION_REQUEST,
     /** A routine, unprompted check-in. */
     PERIODIC,
-    /** The device is reporting a TransferComplete. See decision D12: the payload is what counts. */
+    /** The device is reporting a TransferComplete. See HLD §7.2: the payload is what counts. */
     TRANSFER_COMPLETE
 }
 

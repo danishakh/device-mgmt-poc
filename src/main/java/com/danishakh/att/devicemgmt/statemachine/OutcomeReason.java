@@ -21,7 +21,9 @@ public enum OutcomeReason {
     /** The device rebooted and came back on its from-version, with no TransferComplete. */
     ROLLED_BACK,
     /** The device rebooted on a version that is neither the from-version nor the target. */
-    UNEXPECTED_VERSION
+    UNEXPECTED_VERSION,
+    /** The campaign halted before the device was given a Download (state CANCELLED). */
+    CAMPAIGN_HALTED
 }
 
 

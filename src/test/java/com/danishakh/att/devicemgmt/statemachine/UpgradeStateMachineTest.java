@@ -16,7 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/** Table-driven checks of every row in IMPLEMENTATION-PLAN.md §2.3. No Spring context. */
+/** Table-driven checks of every transition rule in HLD §7. No Spring context. */
 class UpgradeStateMachineTest {
 
     private static final Instant NOW = Instant.parse("2026-10-25T10:00:00Z");
@@ -50,14 +50,14 @@ class UpgradeStateMachineTest {
 
     static Stream<Arguments> table() {
         return Stream.of(
-                // PENDING: only the scheduler leaves PENDING (D7)
+                // PENDING: only the scheduler leaves PENDING (HLD §10.1)
                 Arguments.of("PENDING: tick with a free slot nudges the device",
                         row(PENDING, null, 0, 0), new Tick(true),
                         new Expect(NOTIFIED, null, true, true, false)),
                 Arguments.of("PENDING: tick without a free slot waits",
                         row(PENDING, null, 0, 0), new Tick(false),
                         new Expect(PENDING, null, false, false, false)),
-                Arguments.of("PENDING: an inform does not dispatch (D7)",
+                Arguments.of("PENDING: an inform does not dispatch",
                         row(PENDING, null, 0, 0), inform(InformEvent.PERIODIC, FROM),
                         new Expect(PENDING, null, false, false, false)),
 
@@ -97,10 +97,10 @@ class UpgradeStateMachineTest {
                 Arguments.of("DOWNLOAD_SENT: ack with another key is ignored",
                         row(DOWNLOAD_SENT, KEY, 1, 1), new Ack("other", AckStatus.ACCEPTED),
                         new Expect(DOWNLOAD_SENT, null, false, false, false)),
-                Arguments.of("DOWNLOAD_SENT: TransferComplete with fault 0 finishes the row (D13)",
+                Arguments.of("DOWNLOAD_SENT: TransferComplete with fault 0 finishes the row",
                         row(DOWNLOAD_SENT, KEY, 1, 1), tc(InformEvent.TRANSFER_COMPLETE, TARGET, KEY, 0),
                         new Expect(SUCCEEDED, OutcomeReason.TRANSFER_COMPLETE, true, false, false)),
-                Arguments.of("DOWNLOAD_SENT: TransferComplete with a fault fails the row (D13)",
+                Arguments.of("DOWNLOAD_SENT: TransferComplete with a fault fails the row",
                         row(DOWNLOAD_SENT, KEY, 1, 1), tc(InformEvent.TRANSFER_COMPLETE, TARGET, KEY, 9010),
                         new Expect(FAILED, OutcomeReason.FAULT, true, false, false)),
 
@@ -111,7 +111,7 @@ class UpgradeStateMachineTest {
                 Arguments.of("ACCEPTED: TransferComplete with a fault fails",
                         row(ACCEPTED, KEY, 1, 1), tc(InformEvent.TRANSFER_COMPLETE, FROM, KEY, 9010),
                         new Expect(FAILED, OutcomeReason.FAULT, true, false, false)),
-                Arguments.of("ACCEPTED: TransferComplete on a PERIODIC inform still counts (D12)",
+                Arguments.of("ACCEPTED: TransferComplete on a PERIODIC inform still counts",
                         row(ACCEPTED, KEY, 1, 1), tc(InformEvent.PERIODIC, TARGET, KEY, 0),
                         new Expect(SUCCEEDED, OutcomeReason.TRANSFER_COMPLETE, true, false, false)),
                 Arguments.of("ACCEPTED: TransferComplete with another key is ignored",

@@ -15,8 +15,11 @@ All devices the simulator knows about.
 _Avoid_: Inventory, population
 
 **Eligible Device**:
-A device whose firmware version matches a campaign's filter when the campaign is created.
+A device whose firmware version matches a campaign's filter when the campaign is created, and that has no open device upgrade in another campaign.
 _Avoid_: Target device
+
+**Excluded Device**:
+A device that matched a new campaign's filter but was left out because it already has an open device upgrade in another campaign.
 
 ### Campaign
 
@@ -31,15 +34,18 @@ The firmware version a campaign is installing.
 The firmware version a device was running when a campaign picked it. It never changes after that.
 _Avoid_: Current version (this is a different thing)
 
+**Active Campaign**:
+A campaign that is running or paused. A device belongs to at most one active campaign at a time.
+
 **Paused**:
-A campaign an operator stopped. It starts no new device upgrades and can be resumed.
+A campaign an operator stopped. It starts no new device upgrades and can be resumed. Device upgrades already in flight carry on.
 
 **Halted**:
-A campaign the controller stopped because its failure rate exceeded the threshold. It cannot be resumed.
+A campaign the controller stopped because its failure rate exceeded the threshold. Its device upgrades that had not yet been given a Download are cancelled; those that had run to their outcome. It cannot be resumed.
 _Avoid_: Paused (an operator action, not an automatic stop)
 
 **Failure Rate**:
-Failed plus timed-out device upgrades, divided by all finished device upgrades in a campaign. Devices that were already on the target version are not counted.
+Failed plus timed-out device upgrades, divided by all finished device upgrades in a campaign. Cancelled device upgrades are not counted.
 
 **Minimum Sample**:
 How many device upgrades must finish before the failure rate is allowed to halt a campaign.
@@ -53,21 +59,35 @@ _Avoid_: Job, task, attempt
 **In-flight**:
 A device upgrade that has started but has not finished: Notified, Download Sent or Accepted. The campaign's concurrency limit applies to this count.
 
+**Open**:
+A device upgrade that is Pending or In-flight. A device has at most one open device upgrade at a time.
+
+**Accepted**:
+The device accepted the Download and the controller is waiting for the result. The device may be downloading or rebooting; the controller cannot tell which.
+_Avoid_: Rebooting (the controller never observes a reboot starting)
+
 **Finished**:
 A device upgrade that is Succeeded, Failed or Timed Out.
 _Avoid_: Done, complete
+
+**Cancelled**:
+A device upgrade stopped before the device was given a Download, because its campaign halted. It is not finished and does not count toward the failure rate.
+_Avoid_: Skipped, aborted
 
 **Outcome Reason**:
 Why a device upgrade finished the way it did, for example rejected, fault code, rolled back, no callback.
 
 **Inferred Success**:
-A device upgrade marked Succeeded because the device reported the target version without sending a TransferComplete.
+A device upgrade marked Succeeded because the device reported the target version without sending a TransferComplete, after it was given the Download.
 
 **Rollback**:
 A device that rebooted after accepting the download and came back on its from version without sending a TransferComplete.
 
 **Late Evidence**:
-A TransferComplete for a device upgrade that has already timed out.
+A TransferComplete for a device upgrade that has already timed out. It replaces the timeout with the real outcome. Only a TransferComplete can do this.
+
+**Trailing Evidence**:
+Evidence that arrives after a device upgrade already has an outcome and does not change it. It is recorded alongside the outcome: a TransferComplete after the device upgrade succeeded or failed on other evidence, or a report of the target version after it timed out. The first conclusive evidence wins.
 
 ### Protocol
 
@@ -90,10 +110,15 @@ _Avoid_: Correlation id, request id
 The device saying it accepted or rejected a command. It does not say whether the upgrade worked.
 _Avoid_: Command response, ack
 
+**Rejection**:
+An acknowledgement that refuses a command. It is final for the device upgrade, unless it is a busy rejection.
+
+**Busy Rejection**:
+A rejection given because the device is already working on a download. It is temporary: the device upgrade stays where it is and later evidence or its deadline decides the outcome.
+
 **TransferComplete**:
 The device reporting the final result of a Download, with its command key and a fault code (0 means success).
 _Avoid_: TC, completion
 
 **Duplicate Callback**:
 An inform or acknowledgement that repeats one the controller has already processed. It is accepted and has no effect.
-

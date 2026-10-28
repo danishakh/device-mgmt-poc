@@ -5,7 +5,7 @@ repo root, copied here verbatim except for this docstring's run instructions). I
 a device inventory and a connection-request endpoint. Devices periodically inform the
 controller and execute DOWNLOAD commands returned in inform responses.
 
-See docs/simulator-readme.md for a full explanation of every endpoint, environment
+See docs/simulator.md for a full explanation of every endpoint, environment
 variable and device profile, and how this script's behaviour lines up with the
 controller's state machine.
 
