@@ -313,7 +313,7 @@ sequenceDiagram
     C->>S: GET /devices?version=fromVersion (once)
     S-->>C: [ {deviceId, firmwareVersion} ]
     C->>DB: one transaction: record devices, insert campaign RUNNING,<br/>insert a PENDING device upgrade per device with no open upgrade elsewhere
-    C-->>Op: 201 Location: /campaigns/{id} {id, status, deviceCount, excludedDevices}
+    C-->>Op: 201 Location: /campaigns/{id} {id, status, deviceCount, excludedDeviceCount}
 ```
 
 If no device is eligible, the campaign is created as COMPLETED with zero devices.
@@ -397,8 +397,8 @@ A PENDING device upgrade ignores informs. Only the scheduler starts an upgrade.
   "statusReason": "failure rate 24.0% > 20% after 50 finished",
   "targetVersion": "2.0.0", "fromVersion": "1.0.0",
   "maxConcurrent": 100, "inFlight": 32,
-  "deviceCount": 1000, "excludedDevices": 0,
-  "counts": { "PENDING": 0, "NOTIFIED": 0, "DOWNLOAD_SENT": 2, "ACCEPTED": 30,
+  "deviceCount": 1000, "excludedDeviceCount": 0,
+  "countsByState": { "PENDING": 0, "NOTIFIED": 0, "DOWNLOAD_SENT": 2, "ACCEPTED": 30,
               "SUCCEEDED": 38, "FAILED": 9, "TIMED_OUT": 3, "CANCELLED": 918 },
   "reasons": { "TRANSFER_COMPLETE": 36, "INFERRED_FROM_VERSION": 2, "REJECTED": 4,
                "FAULT": 3, "ROLLED_BACK": 2, "NO_CALLBACK": 3 },
