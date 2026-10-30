@@ -25,6 +25,8 @@ public class UpgradeRow {
     OutcomeReason outcomeReason;
     boolean lateEvidence;
     boolean reportedVersionMismatch;
+    TrailingEvidence trailingEvidence;
+    Integer trailingFaultCode;
 
     /** A brand-new row for a device just snapshotted into a campaign: state PENDING, no history yet. */
     public static UpgradeRow pending(String fromVersion, String targetVersion) {
