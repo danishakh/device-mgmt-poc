@@ -2,7 +2,7 @@ package com.danishakh.att.devicemgmt.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.danishakh.att.devicemgmt.statemachine.UpgradeTimings;
+import com.danishakh.att.devicemgmt.statemachine.DeviceUpgradeTimings;
 import java.time.Clock;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class AppConfigTest {
 
     @Autowired
-    UpgradeTimings timings;
+    DeviceUpgradeTimings timings;
 
     @Autowired
     Clock clock;

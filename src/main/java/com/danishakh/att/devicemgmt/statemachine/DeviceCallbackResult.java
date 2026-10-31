@@ -1,7 +1,7 @@
 package com.danishakh.att.devicemgmt.statemachine;
 
 /** How the state machine classified one event, used by the caller to label callback metrics. */
-public enum CallbackResult {
+public enum DeviceCallbackResult {
     /** The event changed the row in the usual way. */
     APPLIED,
     /** A real outcome replaced a TIMED_OUT row. */

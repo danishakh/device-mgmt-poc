@@ -15,7 +15,7 @@ import com.danishakh.att.devicemgmt.repository.CampaignRepository;
 import com.danishakh.att.devicemgmt.repository.DeviceRepository;
 import com.danishakh.att.devicemgmt.repository.DeviceUpgradeRepository;
 import com.danishakh.att.devicemgmt.statemachine.TrailingEvidence;
-import com.danishakh.att.devicemgmt.statemachine.UpgradeState;
+import com.danishakh.att.devicemgmt.statemachine.DeviceUpgradeState;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.EnumMap;
@@ -91,7 +91,7 @@ public class CampaignService {
                     deviceRepository.insertIfAbsent(eligibleFleetDeviceList, now);
 
                     // Record the devices in the device_upgrade table so the campaign can start upgrading them.
-                    devicesAddedToCampaignCount = deviceUpgradeRepository.insertPending(campaignId, fromVersion,
+                    devicesAddedToCampaignCount = deviceUpgradeRepository.insert(campaignId, fromVersion,
                             eligibleFleetDeviceList.stream().map(FleetDevice::deviceId).toList(), now);
                 }
 
@@ -125,10 +125,10 @@ public class CampaignService {
         Campaign campaign = campaignRepository.findById(campaignId)
                 .orElseThrow(() -> new CampaignNotFoundException(campaignId));
 
-        List<UpgradeBreakdown> breakdown = deviceUpgradeRepository.countByCampaign(campaignId);
+        List<UpgradeBreakdown> breakdown = deviceUpgradeRepository.getCampaignProgressById(campaignId);
         log.debug("getCampaignById() - Campaign {} , UpgradeBreakdown List: {}", campaignId, breakdown);
 
-        Map<UpgradeState, Integer> byState = new EnumMap<>(UpgradeState.class);
+        Map<DeviceUpgradeState, Integer> byState = new EnumMap<>(DeviceUpgradeState.class);
         Map<String, Integer> reasons = new LinkedHashMap<>();
         Map<String, Map<String, Integer>> trailingEvidence = new LinkedHashMap<>();
 
@@ -144,14 +144,14 @@ public class CampaignService {
             }
         }
         Map<String, Integer> counts = new LinkedHashMap<>();
-        for (UpgradeState state : UpgradeState.values()) {
+        for (DeviceUpgradeState state : DeviceUpgradeState.values()) {
             counts.put(state.name(), byState.getOrDefault(state, 0));
         }
-        int inFlight = byState.getOrDefault(UpgradeState.NOTIFIED, 0)
-                + byState.getOrDefault(UpgradeState.DOWNLOAD_SENT, 0)
-                + byState.getOrDefault(UpgradeState.ACCEPTED, 0);
-        int failures = byState.getOrDefault(UpgradeState.FAILED, 0) + byState.getOrDefault(UpgradeState.TIMED_OUT, 0);
-        int finished = failures + byState.getOrDefault(UpgradeState.SUCCEEDED, 0);
+        int inFlight = byState.getOrDefault(DeviceUpgradeState.NOTIFIED, 0)
+                + byState.getOrDefault(DeviceUpgradeState.DOWNLOAD_SENT, 0)
+                + byState.getOrDefault(DeviceUpgradeState.ACCEPTED, 0);
+        int failures = byState.getOrDefault(DeviceUpgradeState.FAILED, 0) + byState.getOrDefault(DeviceUpgradeState.TIMED_OUT, 0);
+        int finished = failures + byState.getOrDefault(DeviceUpgradeState.SUCCEEDED, 0);
         log.debug("getCampaignById() - Campaign {} , counts: {}, inFlight: {}, failures: {}, finished: {}", campaignId, counts, inFlight, failures, finished);
 
         return CampaignProgressResponse.builder()
@@ -234,7 +234,7 @@ public class CampaignService {
 
     /** Groups trailing evidence by what the operator saw first: the outcome reason, or TIMED_OUT for a timeout. */
     private static String trailingEvidenceOutcome(UpgradeBreakdown row) {
-        return row.getState() == UpgradeState.TIMED_OUT ? UpgradeState.TIMED_OUT.name() : row.getOutcomeReason().name();
+        return row.getState() == DeviceUpgradeState.TIMED_OUT ? DeviceUpgradeState.TIMED_OUT.name() : row.getOutcomeReason().name();
     }
 
     /** A fault is shown with its code, for example FAULT_9010. */

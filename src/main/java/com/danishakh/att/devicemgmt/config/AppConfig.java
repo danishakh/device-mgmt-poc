@@ -1,6 +1,6 @@
 package com.danishakh.att.devicemgmt.config;
 
-import com.danishakh.att.devicemgmt.statemachine.UpgradeTimings;
+import com.danishakh.att.devicemgmt.statemachine.DeviceUpgradeTimings;
 import java.time.Clock;
 import java.time.Duration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -19,9 +19,9 @@ public class AppConfig {
     }
 
     @Bean
-    public UpgradeTimings upgradeTimings(DeviceMgmtProperties properties) {
+    public DeviceUpgradeTimings upgradeTimings(DeviceMgmtProperties properties) {
         DeviceMgmtProperties.Timeouts timeouts = properties.getTimeouts();
-        return new UpgradeTimings(
+        return new DeviceUpgradeTimings(
                 Duration.ofMillis(timeouts.getCrWaitMs()),
                 timeouts.getMaxCr(),
                 Duration.ofMillis(timeouts.getAckWaitMs()),

@@ -1,23 +1,25 @@
 package com.danishakh.att.devicemgmt.statemachine;
 
+import java.time.Instant;
+
 /**
  * Everything that can happen to one device upgrade.
  *
  * <p>This is a sealed interface: the four kinds below ({@link Tick}, {@link Deadline},
  * {@link Inform}, {@link Ack}) are the only implementations allowed. That lets
- * {@link UpgradeStateMachine#apply} use a {@code switch} that the compiler checks is
+ * {@link DeviceUpgradeStateMachine#apply} use a {@code switch} that the compiler checks is
  * exhaustive. Each kind is written as a small, final, immutable class instead of a record,
  * so the shape of the data is spelled out explicitly rather than relying on record syntax.
  */
-public sealed interface UpgradeEvent
-        permits UpgradeEvent.Tick, UpgradeEvent.Deadline, UpgradeEvent.Inform, UpgradeEvent.Ack,
-                UpgradeEvent.CampaignHalted {
+public sealed interface DeviceUpgradeEvent
+        permits DeviceUpgradeEvent.Tick, DeviceUpgradeEvent.Deadline, DeviceUpgradeEvent.Inform, DeviceUpgradeEvent.Ack,
+                DeviceUpgradeEvent.CampaignHalted {
 
     /**
      * Fired for every PENDING and NOTIFIED row of a campaign that has just halted. The state
      * machine decides which states are cancelled; the caller sends it to every candidate row.
      */
-    final class CampaignHalted implements UpgradeEvent {
+    final class CampaignHalted implements DeviceUpgradeEvent {
     }
 
     /**
@@ -27,7 +29,7 @@ public sealed interface UpgradeEvent
      * and the number of in-flight devices is below {@code maxConcurrent}. The state machine
      * trusts this flag; it does not look at the campaign itself.
      */
-    final class Tick implements UpgradeEvent {
+    final class Tick implements DeviceUpgradeEvent {
         private final boolean mayStart;
 
         public Tick(boolean mayStart) {
@@ -44,7 +46,7 @@ public sealed interface UpgradeEvent
      * Fired when a row's {@code deadline_at} has passed. The caller finds overdue rows with a
      * database query; the event itself carries no data.
      */
-    final class Deadline implements UpgradeEvent {
+    final class Deadline implements DeviceUpgradeEvent {
     }
 
     /**
@@ -53,7 +55,7 @@ public sealed interface UpgradeEvent
      * <p>Per HLD §7.2, a non-null {@code transferComplete} makes this a TransferComplete,
      * whatever {@code informEvent} says. {@code informEvent} is only the label the device chose for the call.
      */
-    final class Inform implements UpgradeEvent {
+    final class Inform implements DeviceUpgradeEvent {
         private final InformEvent informEvent;
         private final String firmwareVersion;
         private final TransferResult transferComplete;
@@ -94,15 +96,15 @@ public sealed interface UpgradeEvent
     /**
      * The device's {@code command-response} to a Download: ACCEPTED or REJECTED.
      */
-    final class Ack implements UpgradeEvent {
+    final class Ack implements DeviceUpgradeEvent {
         /** Rejection reason a device sends when it is already downloading (HLD §7). */
         public static final String BUSY = "BUSY";
 
         private final String commandKey;
-        private final AckStatus status;
+        private final DeviceAckStatus status;
         private final String reason;
 
-        public Ack(String commandKey, AckStatus status, String reason) {
+        public Ack(String commandKey, DeviceAckStatus status, String reason) {
             this.commandKey = commandKey;
             this.status = status;
             this.reason = reason;
@@ -119,7 +121,7 @@ public sealed interface UpgradeEvent
         }
 
         /** Whether the device accepted or rejected the command. */
-        public AckStatus status() {
+        public DeviceAckStatus status() {
             return status;
         }
     }
@@ -131,10 +133,28 @@ public sealed interface UpgradeEvent
     final class TransferResult {
         private final String commandKey;
         private final int faultCode;
+        private final Instant startTime;
+        private final Instant completeTime;
 
         public TransferResult(String commandKey, int faultCode) {
+            this(commandKey, faultCode, null, null);
+        }
+
+        public TransferResult(String commandKey, int faultCode, Instant startTime, Instant completeTime) {
             this.commandKey = commandKey;
             this.faultCode = faultCode;
+            this.startTime = startTime;
+            this.completeTime = completeTime;
+        }
+
+        /** When the device started the download, or null if the device did not report it. */
+        public Instant startTime() {
+            return startTime;
+        }
+
+        /** When the device finished the download, or null if the device did not report it. */
+        public Instant completeTime() {
+            return completeTime;
         }
 
         /** The commandKey this TransferComplete reports against. */

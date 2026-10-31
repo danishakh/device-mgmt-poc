@@ -17,8 +17,10 @@ public class DeviceRepository {
         this.jdbc = jdbc;
     }
     /**
-     * Records devices the fleet listed, in one statement. A device that is already known is left
-     * alone, so facts it reported itself (version, last event) are never overwritten.
+     * Records the devices the fleet listed, in one statement. Known devices are left alone.
+     *
+     * @param devices the devices the fleet listed
+     * @param now the time to record as first seen and last updated
      */
     public void insertIfAbsent(List<FleetDevice> devices, Instant now) {
         String[] ids = devices.stream().map(FleetDevice::deviceId).toArray(String[]::new);
@@ -36,8 +38,12 @@ public class DeviceRepository {
     }
 
     /**
-     * Records the latest facts from an inform: the version the device reported, the event, and when.
-     * An unknown device gets its row here, so a device in no campaign is still known.
+     * Records the latest facts from an inform. An unknown device gets its row here.
+     *
+     * @param deviceId the device sending the inform
+     * @param firmwareVersion the firmware version the device reported
+     * @param event the inform event the device sent
+     * @param now the time of the inform
      */
     public void recordInform(String deviceId, String firmwareVersion, InformEvent event, Instant now) {
         jdbc.sql("""

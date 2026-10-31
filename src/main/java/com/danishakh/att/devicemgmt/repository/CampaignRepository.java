@@ -25,7 +25,11 @@ public class CampaignRepository {
         this.jdbc = jdbc;
     }
 
-    /** Inserts a new campaign exactly as given, including its status and timestamps. */
+    /**
+     * Inserts a new campaign exactly as given, including its status and timestamps.
+     *
+     * @param campaign the campaign to insert
+     */
     public void insert(Campaign campaign) {
         jdbc.sql("""
                 INSERT INTO campaign (id, target_version, image_url, from_version, max_concurrent,
@@ -50,7 +54,12 @@ public class CampaignRepository {
                 .update();
     }
 
-    /** Returns the campaign with the given id, or empty if none exists. */
+    /**
+     * Finds the campaign with the given id.
+     *
+     * @param id the campaign id
+     * @return the campaign, or empty if none exists
+     */
     public Optional<Campaign> findById(UUID id) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM campaign WHERE id = :id")
                 .param("id", id)
@@ -58,7 +67,11 @@ public class CampaignRepository {
                 .optional();
     }
 
-    /** Returns all campaigns, newest first. */
+    /**
+     * Finds all campaigns, newest first.
+     *
+     * @return every campaign
+     */
     public List<Campaign> findAll() {
         return jdbc.sql("SELECT " + COLUMNS + " FROM campaign ORDER BY created_at DESC, id")
                 .query(CampaignRepository::map)
@@ -69,6 +82,11 @@ public class CampaignRepository {
      * Moves a campaign to {@code next} only if it is still in {@code expected}, so two callers
      * cannot both win. HALTED and COMPLETED also set {@code completed_at}.
      *
+     * @param id the campaign id
+     * @param expected the status the campaign must currently have
+     * @param next the status to move to
+     * @param reason the reason for the change, stored as status_reason
+     * @param now the time of the change
      * @return true if the campaign was in {@code expected} and has been moved, false otherwise
      */
     public boolean updateStatus(UUID id, CampaignStatus expected, CampaignStatus next, String reason, Instant now) {
@@ -87,13 +105,26 @@ public class CampaignRepository {
                 .update();
         return rows == 1;
     }
-    /** Records how many devices were left out at creation because they already had an open upgrade. */
+    /**
+     * Records how many devices were left out of a campaign at creation.
+     *
+     * @param id the campaign id
+     * @param excludedDevices the number of devices left out
+     */
     public void updateExcludedDevices(UUID id, int excludedDevices) {
         jdbc.sql("UPDATE campaign SET excluded_devices = :excluded WHERE id = :id")
                 .param("id", id)
                 .param("excluded", excludedDevices)
                 .update();
     }
+    /**
+     * Maps one campaign row to a Campaign.
+     *
+     * @param rs the result set, positioned on the row
+     * @param rowNum the row number
+     * @return the mapped campaign
+     * @throws SQLException if a column cannot be read
+     */
     private static Campaign map(ResultSet rs, int rowNum) throws SQLException {
         Timestamp completedAt = rs.getTimestamp("completed_at");
         return Campaign.builder()
@@ -112,6 +143,12 @@ public class CampaignRepository {
                 .completedAt(completedAt == null ? null : completedAt.toInstant())
                 .build();
     }
+    /**
+     * Converts an instant for a timestamp parameter.
+     *
+     * @param instant the instant, or null
+     * @return the timestamp, or null when the instant is null
+     */
     private static Timestamp toTimestamp(Instant instant) {
         return instant == null ? null : Timestamp.from(instant);
     }
